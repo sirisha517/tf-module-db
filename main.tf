@@ -49,13 +49,13 @@ resource "aws_ssm_parameter" "docdb_endpoint" {
 }
 
 resource "aws_ssm_parameter" "docdb_user" {
-  name  = "${var.env}.docdb.user"
+  name  = "${var.env}.docdb.url.user"
   type  = "String"
   value = data.aws_ssm_parameter.user.value
 }
 
 resource "aws_ssm_parameter" "docdb_pass" {
-  name  = "${var.env}.docdb.pass"
+  name  = "${var.env}.docdb.url.pass"
   type  = "String"
   value = data.aws_ssm_parameter.pass.value
 }
