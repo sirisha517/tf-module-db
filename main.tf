@@ -1,6 +1,6 @@
 resource "aws_docdb_cluster" "main" {
-  cluster_identifier      = "dev-docdb-cluster"
-  engine                  = "docdb"
+  cluster_identifier      = "${var.env}-docdb"
+  engine                  = var.engine
   engine_version          = var.engine_version
   master_username         = data.aws_ssm_parameter.user.value
   master_password         = data.aws_ssm_parameter.pass.value
@@ -12,6 +12,7 @@ resource "aws_docdb_cluster" "main" {
   storage_encrypted       = var.storage_encrypted
   vpc_security_group_ids  = [aws_security_group.main.id]
 }
+
 resource "aws_docdb_cluster_instance" "cluster_instances" {
   count              = var.no_of_instances
   identifier         = "${var.env}-docdb-${count.index}"
@@ -19,14 +20,13 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
   instance_class     = var.instance_class
 }
 
-
 resource "aws_docdb_subnet_group" "main" {
   name       = "${var.env}-docdb"
   subnet_ids = var.subnet_ids
 
   tags = merge(
     var.tags,
-    { Name = "${var.env}-subnet_ids" }
+    { Name = "${var.env}-subnet-group" }
   )
 }
 
@@ -57,17 +57,17 @@ resource "aws_security_group" "main" {
   )
 }
 
+
 resource "aws_ssm_parameter" "docdb_url_catalogue" {
   name  = "${var.env}.docdb.url.catalogue"
   type  = "String"
-  value = "mongodb://${data.aws_ssm_parameter.user.value}:${data.aws_ssm_parameter.pass.value}@my-docdb-cluster.cluster-c6qgqsmvgfbi.us-east-1.docdb.amazonaws.com:27017/catalogue?ssl=true&ssl_ca_certs=rds-combined-ca-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+  value = "mongodb://${data.aws_ssm_parameter.user.value}:${data.aws_ssm_parameter.pass.value}@${aws_docdb_cluster.main.endpoint}:27017/catalogue?tls=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
 }
-
 
 resource "aws_ssm_parameter" "docdb_url_user" {
   name  = "${var.env}.docdb.url.user"
+  value = "mongodb://${data.aws_ssm_parameter.user.value}:${data.aws_ssm_parameter.pass.value}@${aws_docdb_cluster.main.endpoint}:27017/users?tls=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
   type  = "String"
-  value = "mongodb://${data.aws_ssm_parameter.user.value}:${data.aws_ssm_parameter.pass.value}@my-docdb-cluster.cluster-c6qgqsmvgfbi.us-east-1.docdb.amazonaws.com:27017/users?ssl=true&ssl_ca_certs=rds-combined-ca-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
 }
 
 resource "aws_ssm_parameter" "docdb_endpoint" {
