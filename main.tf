@@ -1,5 +1,5 @@
 resource "aws_docdb_cluster" "main" {
-  cluster_identifier      = "my-docdb-cluster"
+  cluster_identifier      = "dev-docdb-cluster"
   engine                  = "docdb"
   engine_version          = var.engine_version
   master_username         = data.aws_ssm_parameter.user.value
